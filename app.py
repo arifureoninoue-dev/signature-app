@@ -7,13 +7,19 @@ from PIL import Image
 from vercel_blob import put, get # Vercel Blobライブラリをインポート
 from io import BytesIO # 画像をメモリ上で扱うためにインポート
 
-app = Flask(__name__)
+# --- Path Configuration (Vercel Deployment Fix) ---
+# 現在のファイルの場所を基準に絶対パスを生成
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+# template_folderのパスを絶対パスで指定
+app = Flask(__name__, template_folder=os.path.join(basedir, 'templates'))
 
 # --- Configuration ---
 # SECRET_TOKENはVercelの環境変数に設定することを推奨します
 SECRET_TOKEN = os.environ.get("SECRET_TOKEN", "ajs") 
 
-FONT_FILE = "NotoSansJP-Regular.ttf"
+# FONT_FILEのパスも絶対パスで指定
+FONT_FILE = os.path.join(basedir, "NotoSansJP-Regular.ttf")
 
 # --- Data ---
 EXPLAINERS = {
