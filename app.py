@@ -4,21 +4,15 @@ import datetime
 from flask import Flask, render_template, request, redirect, url_for, Response
 from fpdf import FPDF
 from PIL import Image
-from vercel_blob import put, get # Vercel Blobライブラリをインポート
-from io import BytesIO # 画像をメモリ上で扱うためにインポート
+from vercel_blob import put, blob # Vercel Blobライブラリをインポート (get -> blob に修正)
+from io import BytesIO 
 
 # --- Path Configuration (Vercel Deployment Fix) ---
-# 現在のファイルの場所を基準に絶対パスを生成
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# template_folderのパスを絶対パスで指定
 app = Flask(__name__, template_folder=os.path.join(basedir, 'templates'))
 
 # --- Configuration ---
-# SECRET_TOKENはVercelの環境変数に設定することを推奨します
 SECRET_TOKEN = os.environ.get("SECRET_TOKEN", "ajs") 
-
-# FONT_FILEのパスも絶対パスで指定
 FONT_FILE = os.path.join(basedir, "NotoSansJP-Regular.ttf")
 
 # --- Data ---
@@ -198,7 +192,8 @@ def generate_pdf():
         return "必要な情報が不足しています。", 400
 
     try:
-        blob_response = get(signature_file)
+        # get -> blob.get に修正
+        blob_response = blob.get(signature_file)
         signature_image_data = blob_response.read()
         signature_image = Image.open(BytesIO(signature_image_data))
         temp_signature_path = f"/tmp/{signature_file}"
@@ -211,7 +206,7 @@ def generate_pdf():
     pdf.add_page()
     pdf.add_font('NotoSansJP', '', FONT_FILE) 
 
-    # --- PDFレイアウト (ここから下は変更なし) ---
+    # --- PDFレイアウト ---
     pdf.set_font('NotoSansJP', '', 10)
     pdf.set_xy(pdf.l_margin, 10)
     pdf.cell(0, 10, '参考様式第５－９号', align='L')
