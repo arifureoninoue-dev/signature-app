@@ -4,7 +4,7 @@ import datetime
 from flask import Flask, render_template, request, redirect, url_for, Response
 from fpdf import FPDF
 from PIL import Image
-from vercel_blob import put, blob # Vercel Blobライブラリをインポート (get -> blob に修正)
+import vercel_blob # ライブラリ全体をインポートする
 from io import BytesIO 
 
 # --- Path Configuration (Vercel Deployment Fix) ---
@@ -15,7 +15,7 @@ app = Flask(__name__, template_folder=os.path.join(basedir, 'templates'))
 SECRET_TOKEN = os.environ.get("SECRET_TOKEN", "ajs") 
 FONT_FILE = os.path.join(basedir, "NotoSansJP-Regular.ttf")
 
-# --- Data ---
+# --- Data (省略) ---
 EXPLAINERS = {
     "vi": [ "PHAM VAN THINH", "HOANG ANH NAM" ],
     "id": [ "PETRI SURYANI", "IMELDA SARIHUTAJULU", "FEBRI SAHRULLAH AHDIN", "MARISYA UTARI", "MOHAMMAD FARID HIDAYATULLAH", "VANESSA KOBAYASHI" ],
@@ -165,7 +165,8 @@ def sign():
         try:
             header, encoded = signature_data_url.split(",", 1)
             image_data = base64.b64decode(encoded)
-            put(filename, image_data, options={'access': 'public'})
+            # put -> vercel_blob.put に修正
+            vercel_blob.put(filename, image_data, options={'access': 'public'})
         except Exception as e:
             print(f"Error uploading signature to Blob: {e}")
             return "署名画像のアップロードに失敗しました。", 500
@@ -192,8 +193,8 @@ def generate_pdf():
         return "必要な情報が不足しています。", 400
 
     try:
-        # get -> blob.get に修正
-        blob_response = blob.get(signature_file)
+        # get -> vercel_blob.blob.get に修正
+        blob_response = vercel_blob.blob.get(signature_file)
         signature_image_data = blob_response.read()
         signature_image = Image.open(BytesIO(signature_image_data))
         temp_signature_path = f"/tmp/{signature_file}"
@@ -206,7 +207,7 @@ def generate_pdf():
     pdf.add_page()
     pdf.add_font('NotoSansJP', '', FONT_FILE) 
 
-    # --- PDFレイアウト ---
+    # --- PDFレイアウト (省略) ---
     pdf.set_font('NotoSansJP', '', 10)
     pdf.set_xy(pdf.l_margin, 10)
     pdf.cell(0, 10, '参考様式第５－９号', align='L')
@@ -270,7 +271,8 @@ def generate_pdf():
     
     try:
         pdf_filename = os.path.splitext(signature_file)[0] + '.pdf'
-        put(pdf_filename, pdf_output, options={'access': 'public'})
+        # put -> vercel_blob.put に修正
+        vercel_blob.put(pdf_filename, pdf_output, options={'access': 'public'})
         print(f"Successfully uploaded PDF to Blob: {pdf_filename}")
     except Exception as e:
         print(f"Error uploading completed PDF to Blob: {e}")
